@@ -42,11 +42,10 @@ Mini-sync's bindings for AngularJS and SQLAlchemy handle all of the above for yo
 
 Example usage (Flask):
 
-	from flask import request
 	from osp import SyncObject
 	import json
 	
-	data = json.loads(request.data)
+	data = json.loads(clean_data)
 	for resource_name, mapper_obj_dict in data.iteritems():
 		mapper_module_name, mapper_class_name = resource_name.split('.')
  		mapper_module = getattr(core, mapper_module_name)
