@@ -1,7 +1,7 @@
 mini-sync
 ===================
 
-Python/SQLAlchemy and AngularJS bindings for a non-concurrent, DRY, fairly RESTful client-server object synchronization pattern. An experiment in minimalist web application architecture.
+A relational object synchronization library. Serialize your SQLAlchemy mapper classes to JSON, submit updates back to the server, and let minisync figure out the rest. An experiment in minimalist web application architecture.
 
 What does mini-sync do?
 -----------
