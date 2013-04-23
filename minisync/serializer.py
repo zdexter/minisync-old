@@ -27,7 +27,10 @@ class Serializer(object):
             value = rec_getattr(self, attr)
             if value != None:
                 if isinstance(value, list):
-                    d[attr] = [{k: self.__typeCheck(rec_getattr(x, k)) for k in x.__public__} for x in value]
+                    try:
+                        d[attr] = [{k: self.__typeCheck(rec_getattr(x, k)) for k in x.__public__} for x in value]
+                    except AttributeError:
+                        d[attr] = value
                 else:
                     d[attr] = self.__typeCheck(value)
         return d
