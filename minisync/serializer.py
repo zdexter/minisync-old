@@ -1,37 +1,43 @@
 import datetime
 
 def rec_getattr(obj, attr):
-    return reduce(getattr, attr.split('.'), obj)
+    try:
+        ret_attr = reduce(getattr, attr.split('.'), obj)
+    except AttributeError:
+        ret_attr = None
+    return ret_attr
 
 class Serializer(object):
-    """
-    Mixin for SQLAlchemy mapper classes.
-    Usage:
-        Use this mixin, then set a property __public__ on your mapper class.
-        __public__ is a list of properties on the mapper class instances or on related instances.
-    """
     __public__ = None
-
-    def __typeCheck(self, value):
+    
+    @staticmethod
+    def rec_serialize(attr):
         """
-        Return a serializable form of value.
-        TODO: Support configurable date formats
+        Return:
+            A value, if attr is a scalar
+            A dictionary of key-value pairs, if attr is a db.Model instance
+            A list, if attr is a list
+            If a value is a nonterminal (list or db.Model instance), recurse.
         """
-        if isinstance(value, datetime.datetime):
-            return value.isoformat()
-        return value
-
-    def to_serializable_dict(self):
         d = {}
-        for attr in self.__public__:
-            value = rec_getattr(self, attr)
-            if value != None:
-                if isinstance(value, list):
-                    try:
-                        d[attr] = [{k: self.__typeCheck(rec_getattr(x, k)) for k in x.__public__} for x in value]
-                    except AttributeError:
-                        d[attr] = value
-                else:
-                    d[attr] = self.__typeCheck(value)
+        if isinstance(attr, db.Model):
+           return attr.to_serializable_dict()
+        elif isinstance(attr, list):
+            return [Serializer.rec_serialize(a) for a in attr]
+        elif isinstance(attr, datetime.datetime):
+            return attr.isoformat()
+        return attr
+
+    def to_serializable_dict(self, props=None):
+        """
+        Arguments:
+            [props] - a list of strings, an optional list of property names to serialize.
+                      If None, all string property names in self.__public__ will be serialized.
+                      [None]
+        """
+        d = {}
+        for attr_name in props or self.__public__:
+            attr_to_serialize = rec_getattr(self, attr_name)
+            d[attr_name] = Serializer.rec_serialize(attr_to_serialize)
         return d
 
