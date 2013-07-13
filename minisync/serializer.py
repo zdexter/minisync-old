@@ -1,4 +1,6 @@
 import datetime
+from sqlalchemy.exc import NoInspectionAvailable, ArgumentError
+from sqlalchemy.orm import class_mapper
 
 def rec_getattr(obj, attr):
     try:
@@ -9,7 +11,7 @@ def rec_getattr(obj, attr):
 
 class Serializer(object):
     __public__ = None
-    
+
     @staticmethod
     def rec_serialize(attr):
         """
@@ -20,9 +22,15 @@ class Serializer(object):
             If a value is a nonterminal (list or db.Model instance), recurse.
         """
         d = {}
-        if isinstance(attr, db.Model):
-           return attr.to_serializable_dict()
-        elif isinstance(attr, list):
+
+        try:
+            class_mapper(attr)
+        except (NoInspectionAvailable, ArgumentError):
+            pass # If it's not a mapped instance
+        else:
+            return attr.to_serializable_dict()
+
+        if isinstance(attr, list):
             return [Serializer.rec_serialize(a) for a in attr]
         elif isinstance(attr, datetime.datetime):
             return attr.isoformat()
